@@ -1,0 +1,48 @@
+# Compiled source:
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.so
+
+# Logs and databases:
+*.log
+
+# OS generated files:
+.DS_Store
+.DS_Store?
+._*
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Python:
+*.pyc
+*.pyo
+
+# Data traces:
+results/*
+*/results/
+image-*.pdf
+image.pdf
+image.pmg
+image*.png
+*.backup/
+
+#geany
+geany_run_script.sh
+
+#Archive folders:
+*/*/.old
+*/.old
+.old
+
+#config files:
+*.cfg
+
+#git
+*.py.*
+
+#gedit
+*~
