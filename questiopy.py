@@ -31,26 +31,22 @@ def main(pre_format='testmaker', source = False):
     formats_dir = path.dirname(path.realpath(__file__))+'/'+formats_dir
     keys_list = [path.splitext(i)[0] for i in listdir(keys_dir) if i.endswith('.csv')] #list of questionnare IDs for which we provide decoding
     format_processing = pd.read_csv(formats_dir+data_format+'.csv')
+    
     if data_format == 'testmaker':
 	import key_functions
 	raw_data = pd.read_csv(input_file, sep='/').set_index(['ID_v'])
-	#~ print(raw_data.columns)
 	question_ids = set([i.partition('_')[0] for i in raw_data.columns])
 	question_ids = [i for i in question_ids if i in keys_list]
 	results = pd.DataFrame(index=raw_data.index, columns=question_ids)
-	for sub_test in ['BDI2', 'SQ', 'EQ', 'AQ']: # for sub_test in question_ids:
+	for sub_test in question_ids: # for sub_test in question_ids:
 	    test_key = pd.read_csv(keys_dir+sub_test+'.csv') # load the key used to score the answers
 	    test_fields = fnmatch.filter(raw_data.columns, sub_test+'_*') 
 	    test_questions = raw_data[test_fields] # slice the relevant answers from the raw results
-	    test_questions = test_questions + format_processing['add'][0]
-	    #~ print(test_questions)
-	    #~ print(np.shape(test_key), np.shape(test_questions))
-	    scored_questions = getattr(key_functions, sub_test)(test_questions, test_key)
-	    #~ print(scored_questions)
-	    results[sub_test] = scored_questions
-	    print results
+	    test_questions = test_questions + format_processing['add'][0] # preprocess data typically for testmaker (subtract 1 from all scores so scoring starts with 0)
+	    results = getattr(key_functions, sub_test)(test_questions, test_key, results)
     elif data_format == 'surveygizmo':
-	raise ValueError('The \'surveygizmo\' format is not yet supported. If you cannot do without this please direct your query to h.chr@mail.ru.')
+	raise ValueError('The \'surveygizmo\' format is not yet supported. If you cannot make due without this please direct your query to h.chr@mail.ru.')
+    return results
     
 if __name__ == '__main__':
 	main()
