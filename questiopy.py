@@ -46,7 +46,7 @@ def parse_results(input_file=False, source=False, data_format=""):
 			results = getattr(key_functions, sub_test)(test_questions, test_key, results)
 	elif data_format in ['surveygizmo', "surveymonkey"]:
 		raise ValueError('The \'surveygizmo\' format is not yet supported. If you cannot make due without this please direct your query to h.chr@mail.ru.')
-	elif data_format == "berich1":
+	elif data_format == "cuQuest1":
 		raw_data = pd.read_csv(input_file, sep=';')
 	return results
 
