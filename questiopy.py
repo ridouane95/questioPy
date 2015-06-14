@@ -25,14 +25,17 @@ def parse_results(input_file=False, source=False, data_format=""):
 		data_format = config.get('Parameters', 'data_format')
 	#END IMPORT VARIABLES
 
-	input_file = path.expanduser(input_file)
+	if type(input_file) is list:
+		input_file = [path.expanduser(input_file_item) for input_file_item in input_file]
+	else:
+		input_file = path.expanduser(input_file)
 
 	keys_dir = path.dirname(path.realpath(__file__))+'/'+keys_dir
 	formats_dir = path.dirname(path.realpath(__file__))+'/'+formats_dir
 	keys_list = [path.splitext(i)[0] for i in listdir(keys_dir) if i.endswith('.csv')] #list of questionnare IDs for which we provide decoding
-	format_processing = pd.read_csv(formats_dir+data_format+'.csv')
 
 	if data_format == 'testmaker':
+		format_processing = pd.read_csv(formats_dir+data_format+'.csv')
 		import key_functions
 		raw_data = pd.read_csv(input_file, sep='/').set_index(['ID_v'])
 		question_ids = set([i.partition('_')[0] for i in raw_data.columns])
@@ -47,8 +50,25 @@ def parse_results(input_file=False, source=False, data_format=""):
 	elif data_format in ['surveygizmo', "surveymonkey"]:
 		raise ValueError('The \'surveygizmo\' format is not yet supported. If you cannot make due without this please direct your query to h.chr@mail.ru.')
 	elif data_format == "cuQuest1":
-		raw_data = pd.read_csv(input_file, sep=';')
-	return results
+		response_data = pd.read_csv(input_file[0], sep=';')
+		self_data = pd.read_csv(input_file[1], sep=';')
+		self_data = self_data[(self_data['curiosity'].notnull()) & (self_data['knowledge'].notnull())]
+
+		participant_list = list(set(self_data["participant"].values.tolist()))
+		correlation_df_columns=["participant", "pCvK", "pCvCo", "pCvM", "pKvCo", "pKvM", "pMvCo", "kCvK", "kCvCo", "kCvM", "kKvCo", "kKvM", "kMvCo", "sCvK", "sCvCo", "sCvM", "sKvCo", "sKvM", "sMvCo"]
+
+		correlations_df = pd.DataFrame(index=participant_list, columns=correlation_df_columns)
+		correlations_df = correlations_df.fillna(0) # with 0s rather than NaNs
+		correlations_df["participant"] = participant_list
+		for participant in participant_list:
+			correlation_list=[]
+			for correlation_type in ["pearson", "kendall", "spearman"]:
+				correlation = self_data[(self_data["participant"] == participant)][["curiosity","knowledge"]].corr(method=correlation_type, min_periods=1)["curiosity"]["knowledge"]
+				correlations_df.loc[(correlations_df['participant'] == participant),correlation_type[0]+"CvK"] = correlation
+
+
+
+		print(correlations_df)
 
 if __name__ == '__main__':
-	parse_results()
+	parse_results(input_file=["~/data/curquest/data_resp.csv","~/data/curquest/data_self.csv"],data_format="cuQuest1")
