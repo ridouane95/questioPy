@@ -53,22 +53,28 @@ def parse_results(input_file=False, source=False, data_format=""):
 		response_data = pd.read_csv(input_file[0], sep=';')
 		self_data = pd.read_csv(input_file[1], sep=';')
 		self_data = self_data[(self_data['curiosity'].notnull()) & (self_data['knowledge'].notnull())]
+		self_data["memory"]=""
+		self_data["confabulation"]=""
+		print(self_data.columns.values)
 
 		participant_list = list(set(self_data["participant"].values.tolist()))
 		correlation_df_columns=["participant", "pCvK", "pCvCo", "pCvM", "pKvCo", "pKvM", "pMvCo", "kCvK", "kCvCo", "kCvM", "kKvCo", "kKvM", "kMvCo", "sCvK", "sCvCo", "sCvM", "sKvCo", "sKvM", "sMvCo"]
+		category_list = list(set(self_data["categories"].values.tolist()))
 
 		correlations_df = pd.DataFrame(index=participant_list, columns=correlation_df_columns)
 		correlations_df = correlations_df.fillna(0) # with 0s rather than NaNs
 		correlations_df["participant"] = participant_list
 		for participant in participant_list:
-			correlation_list=[]
 			for correlation_type in ["pearson", "kendall", "spearman"]:
 				correlation = self_data[(self_data["participant"] == participant)][["curiosity","knowledge"]].corr(method=correlation_type, min_periods=1)["curiosity"]["knowledge"]
 				correlations_df.loc[(correlations_df['participant'] == participant),correlation_type[0]+"CvK"] = correlation
+			for category in category_list:
+				confabulation_score = response_data.loc[(response_data['participant'] == participant) & (response_data['category'].str.contains(category)) & (response_data['on screen'] == "no"),"responses"].mean()
 
 
 
-		print(correlations_df)
+		#print(self_data.columns.values, category_list)
+		#print(response_data)
 
 if __name__ == '__main__':
-	parse_results(input_file=["~/data/curquest/data_resp.csv","~/data/curquest/data_self.csv"],data_format="cuQuest1")
+	parse_results(input_file=["~/data/curquest/data-finale.csv","~/data/curquest/data-cu_kn.csv"],data_format="cuQuest1")
